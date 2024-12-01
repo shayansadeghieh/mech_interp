@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "tritonian"
+version = "0.1.0"
+description = ""
+authors = ["Shayan Sadeghieh <shayan.sadeghieh@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+torch = "^2.5.1"
+einops = "^0.8.0"
+jaxtyping = "^0.2.36"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
