@@ -1,11 +1,14 @@
 import einops
 import torch 
+import tqdm
 
 from dataclasses import dataclass 
 from jaxtyping import Float 
 from torch import Tensor, nn 
 from torch.nn import functional as F
 from typing import Literal
+
+from toy_model.toy_model import Model 
 
 
 @dataclass
@@ -24,17 +27,6 @@ class SAEConfig:
     wieght_normalize_eps: float = 1e-8
     tied_weights: bool = False
     architecture: Literal["standard", "gated"] = "standard"
-
-class ModelConfig:
-    """
-    d_hidden: The dimension of the activation layer that you're training on 
-    """
-    d_hidden: int 
-
-class Model(nn.Module):
-    def __init__(self, cfg: ModelConfig):
-        super(Model, self).__init__()
-        self.cfg = cfg 
 
 class SAE(nn.Module):
     """
@@ -58,6 +50,13 @@ class SAE(nn.Module):
 
         self.W_dec = nn.Parameter(nn.init.kaiming_uniform_(torch.empty((self.cfg.d_sae, self.cfg.d_in))))
         self.b_dec = nn.Parameter(torch.zeros((cfg.d_in)))  
+    
+    def generate_batch(self, batch_size: int):
+        return einops.einsum(
+            self.model.generate_batch(batch_size),
+            self.model.W,
+            "batch feats, d_in feats -> batch d_in"
+        )
 
     def forward(self, h: Float[Tensor, "batch d_in"]):
         """
@@ -82,6 +81,25 @@ class SAE(nn.Module):
         loss = (loss_reconstruction + self.cfg.l1_coeff * loss_sparsity).mean(0).sum()
 
         return loss_dict, loss, activations, h_reconstructed
+
+    def optimize(self, lr: float = 1e-3, steps: int = 10_000):
+        """
+        Args:
+            lr: Learning rate 
+            steps: Number of optimization steps 
+        """
+
+        optimizer = torch.optim.Adam(list(self.parameters()), lr=lr, betas=(0.0, 0.999))
+        progress_bar = tqdm(range(steps))
+
+        data_log = {"steps": [], "W_enc": [], "W_dec": [], "frac_active": []}
+        
+        for step in progress_bar: 
+
+            # Get a batch of hidden activations from the model 
+            with torch.inference_mode():
+                h = self.generate_batch(batch_size)
+            
 
         
 
