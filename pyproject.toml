@@ -2,7 +2,7 @@
 name = "mech_interp"
 version = "0.1.0"
 description = ""
-authors = ["Shayan Sadeghieh <shayan.sadeghieh@gmail.com>"]
+authors = ["Shayan Sadeghieh"]
 readme = "README.md"
 packages = [
     { include = "sae", from = "src" },
