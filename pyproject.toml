@@ -1,9 +1,14 @@
 [tool.poetry]
-name = "tritonian"
+name = "mech_interp"
 version = "0.1.0"
 description = ""
 authors = ["Shayan Sadeghieh <shayan.sadeghieh@gmail.com>"]
 readme = "README.md"
+packages = [
+    { include = "sae", from = "src" },
+    { include = "toy_model", from = "src" },
+]
+
 
 [tool.poetry.dependencies]
 python = "^3.12"

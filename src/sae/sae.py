@@ -1,11 +1,11 @@
 import einops
 import torch 
-import tqdm
 
 from dataclasses import dataclass 
 from jaxtyping import Float 
 from torch import Tensor, nn 
 from torch.nn import functional as F
+from tqdm import tqdm 
 from typing import Literal
 
 from toy_model.toy_model import Model 
@@ -21,8 +21,8 @@ class SAEConfig:
     tied_weights: Whether encoder and decoder weights are tied 
     architecture: 
     """
-    d_in: int 
-    d_sae: int
+    d_in: int = 2
+    d_sae: int = 5
     l1_coeff: float = 0.2
     wieght_normalize_eps: float = 1e-8
     tied_weights: bool = False
@@ -37,7 +37,7 @@ class SAE(nn.Module):
     W_dec: Float[Tensor, "d_sae d_in"] 
     b_dec: Float[Tensor, "d_in"]
 
-    def __init__(self, cfg: SAEConfig, model: Model):
+    def __init__(self, model: Model, cfg: SAEConfig = SAEConfig()):
         super().__init__()
 
         assert cfg.d_in == model.cfg.d_hidden, "Model's hidden dim doesn't match SAE input dim"
@@ -63,7 +63,7 @@ class SAE(nn.Module):
         Args:
             h: hidden layer activations of the model 
         """
-        h_cent = h - self.b_enc 
+        h_cent = h - self.b_dec
 
         activations = einops.einsum(h_cent, self.W_enc, "batch d_in, d_in d_sae -> batch d_sae")
         activations = F.relu(activations + self.b_enc)
@@ -82,7 +82,7 @@ class SAE(nn.Module):
 
         return loss_dict, loss, activations, h_reconstructed
 
-    def optimize(self, lr: float = 1e-3, steps: int = 10_000):
+    def optimize(self, lr: float = 1e-3, steps: int = 10_000, batch_size: int = 1024):
         """
         Args:
             lr: Learning rate 
@@ -91,6 +91,7 @@ class SAE(nn.Module):
 
         optimizer = torch.optim.Adam(list(self.parameters()), lr=lr, betas=(0.0, 0.999))
         progress_bar = tqdm(range(steps))
+        frac_active_list = []
 
         data_log = {"steps": [], "W_enc": [], "W_dec": [], "frac_active": []}
         
@@ -100,7 +101,35 @@ class SAE(nn.Module):
             with torch.inference_mode():
                 h = self.generate_batch(batch_size)
             
+            loss_dict, loss, activations, _ = self.forward(h)
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
 
+            # Calculate the mean sparsities over batch dim for each feature
+            frac_active = (activations.abs() > 1e-8).float().mean(0)
+            frac_active_list.append(frac_active)
+
+            if  (step + 1 == steps):
+                progress_bar.set_postfix(
+                    lr=lr,
+                    frac_active=frac_active.mean().item(),
+                    **{k: v.mean(0).sum().item() for k, v in loss_dict.items()},  # type: ignore
+                )
+                data_log["W_enc"].append(self.W_enc.detach().cpu().clone())
+                data_log["W_dec"].append(self.W_dec.detach().cpu().clone())
+                data_log["frac_active"].append(frac_active.detach().cpu().clone())
+                data_log["steps"].append(step)
         
+        return data_log
+            
 
+if __name__ == "__main__":
+    toy_model = Model()
+    toy_model.optimize(steps=10_000)
+
+    sae = SAE(model=toy_model)
+    data_log = sae.optimize(steps=25_000)
+
+    print("this is data_log", data_log)
 
