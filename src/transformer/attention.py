@@ -15,8 +15,8 @@ class Attention(nn.Module):
     W_V: Float[Tensor, "n_heads d_model d_head"]
     b_V: Float[Tensor, "n_heads d_head"]
 
-    W_O: Float[Tensor, "n_heads d_model d_head"]
-    b_O: Float[Tensor, "n_heads d_head"]
+    W_O: Float[Tensor, "n_heads d_head d_model"]
+    b_O: Float[Tensor, "d_model"]
 
     def __init__(self, cfg):
         super().__init__()
@@ -33,8 +33,8 @@ class Attention(nn.Module):
         self.b_V = nn.Parameter(torch.zeros((cfg.n_heads, cfg.d_head)))
         nn.init.normal_(self.W_V, std=self.cfg.init_range)
 
-        self.W_O = nn.Parameter(torch.empty((cfg.n_heads, cfg.d_model, cfg.d_head)))
-        self.b_O = nn.Parameter(torch.zeros((cfg.n_heads, cfg.d_head)))
+        self.W_O = nn.Parameter(torch.empty((cfg.n_heads, cfg.d_head, cfg.d_model)))
+        self.b_O = nn.Parameter(torch.zeros((cfg.d_model)))
         nn.init.normal_(self.W_O, std=self.cfg.init_range)
 
         self.register_buffer("IGNORE", torch.tensor(-1e5, dtype=torch.float32))

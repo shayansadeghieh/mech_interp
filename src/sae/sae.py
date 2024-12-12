@@ -130,6 +130,5 @@ if __name__ == "__main__":
 
     sae = SAE(model=toy_model)
     data_log = sae.optimize(steps=25_000)
-
-    print("this is data_log", data_log)
+    
 

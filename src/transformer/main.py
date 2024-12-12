@@ -25,7 +25,7 @@ class DemoTransformer(nn.Module):
     def forward(self, tokens: Float[Tensor, "batch position"]):        
         embed = self.embed(tokens)
         pos_embed = self.pos_embed(tokens)
-        residual = embed + pos_embed
+        residual = embed + pos_embed        
         for block in self.blocks:
             residual = block(residual)
         normalized_resid_final = self.ln_final(residual)
@@ -51,7 +51,6 @@ if __name__ == "__main__":
     log_every = 10
     lr = 1e-3
     weight_decay = 1e-2
-
     
     dataset = "The cat in the hat"
     
