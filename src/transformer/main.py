@@ -1,4 +1,16 @@
-import torch 
+import os
+# We set TOKENIZERS_PARALLELISM to false to silence a warning from HuggingFace 
+# I also don't think we need parallelism right now for our tokenizer? 
+# See https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+import numpy as np 
+import plotly_express as px 
+import torch
+
+# Running locally on my mac 
+if torch.backends.mps.is_available():
+    torch.set_default_device("mps")
 
 from transformer.transformer_block import TransformerBlock
 from transformer.config import Config
@@ -47,24 +59,25 @@ if __name__ == "__main__":
 
     batch_size = 8
     num_epochs = 1
-    max_steps = 1000
+    max_steps = 200
     log_every = 10
     lr = 1e-3
     weight_decay = 1e-2
     
-    dataset = "The cat in the hat"
+    num_repeats = 1000
+    dataset = ["The cat in the hat", "The dog in the house"] * num_repeats
     
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
     tokens = tokenizer(dataset, return_tensors='pt')
 
     tensor_dataset = torch.utils.data.TensorDataset(tokens['input_ids'])
-    data_loader = torch.utils.data.DataLoader(tensor_dataset)
+    data_loader = torch.utils.data.DataLoader(tensor_dataset, batch_size=batch_size)
     
     losses = []
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     for epoch in range(num_epochs):
         for c, batch in tqdm(enumerate(data_loader)):
-            tokens = batch[0]            
+            tokens = batch[0]                
             logits = model(tokens)
             loss = lm_cross_entropy_loss(logits, tokens)
             loss.backward()
@@ -75,4 +88,9 @@ if __name__ == "__main__":
                 print(f"Step: {c}, Loss: {loss.item():.4f}")
             if c > max_steps:
                 break 
+    
+    fig = px.line(y=losses, x=np.arange(len(losses))*(cfg.n_ctx * batch_size), labels={"y":"Loss", "x":"Tokens"}, title="Training Curve")
+    fig.show()
+    
+    torch.save(model.state_dict(), 'model_weights.pth')
 
