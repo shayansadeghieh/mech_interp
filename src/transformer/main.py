@@ -20,6 +20,7 @@ from transformer.attention import Attention
 
 from datetime import datetime 
 from jaxtyping import Float
+from pathlib import Path
 from torch import nn
 from torch import Tensor
 from transformers import AutoTokenizer
@@ -60,12 +61,12 @@ if __name__ == "__main__":
 
     batch_size = 8
     num_epochs = 1
-    max_steps = 200
+    max_steps = 1000
     log_every = 10
     lr = 1e-3
     weight_decay = 1e-2
     
-    num_repeats = 1000
+    num_repeats = 1000000
     dataset = ["The cat in the hat", "The dog in the house"] * num_repeats
     
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
@@ -98,4 +99,3 @@ if __name__ == "__main__":
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     save_path = os.path.join('trained_models', f'model_weights_{timestamp}.pth')
     torch.save(model.state_dict(), save_path)
-

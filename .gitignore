@@ -163,3 +163,6 @@ cython_debug/
 
 # Don't include trained model weights
 **/trained_models/
+
+# Don't include ds_store
+**/.DS_store 
