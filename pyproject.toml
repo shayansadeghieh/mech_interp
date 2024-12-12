@@ -7,6 +7,7 @@ readme = "README.md"
 packages = [
     { include = "sae", from = "src" },
     { include = "toy_model", from = "src" },
+    { include = "transformer", from = "src" },
 ]
 
 
@@ -16,7 +17,13 @@ torch = "^2.5.1"
 einops = "^0.8.0"
 jaxtyping = "^0.2.36"
 tqdm = "^4.67.1"
-numpy = "^2.1.3"
+numpy = "^1.26.4"
+transformer-lens = "^2.9.1"
+sae-lens = "^5.2.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
 
 [build-system]
 requires = ["poetry-core"]
