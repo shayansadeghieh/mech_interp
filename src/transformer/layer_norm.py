@@ -16,7 +16,7 @@ class LayerNorm(nn.Module):
     
     def forward(self, residual: Float[Tensor, "batch position d_model"]):
         residual = residual - einops.reduce(residual, "batch position d_model -> batch position 1", "mean")
-        scale = (einops.reduce(residual.power(2), "batch position d_model -> batch position 1", "mean") + self.cfg.layer_norm_eps).sqrt()
+        scale = (einops.reduce(residual.pow(2), "batch position d_model -> batch position 1", "mean") + self.cfg.layer_norm_eps).sqrt()
         normalized = residual / scale
         normalized = normalized * self.W + self.b 
         return normalized 

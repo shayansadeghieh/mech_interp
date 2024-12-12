@@ -1,8 +1,8 @@
+from torch import nn
+
 from transformer.layer_norm import LayerNorm 
 from transformer.attention import Attention
 from transformer.mlp import MLP 
-
-from torch import nn
 
 class TransformerBlock(nn.Module):
     def __init__(self, cfg):
