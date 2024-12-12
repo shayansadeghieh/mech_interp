@@ -26,7 +26,7 @@ class MLP(nn.Module):
     
     def forward(self, normalized_resid_mid: Float[Tensor, "batch position d_model"]):
         pre = einops.einsum(normalized_resid_mid, self.W_in, "batch position d_model, d_model d_mlp -> batch position d_mlp") + self.b_in 
-        post = torch.nn.GELU(pre)
+        post = torch.nn.functional.gelu(pre)        
         mlp_out = einops.einsum(post, self.W_out, "batch position d_mlp, d_mlp d_model -> batch position d_model") + self.b_out
         return mlp_out
 
