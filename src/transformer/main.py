@@ -18,6 +18,7 @@ from transformer.embed import Embed, PosEmbed, Unembed
 from transformer.layer_norm import LayerNorm
 from transformer.attention import Attention
 
+from datetime import datetime 
 from jaxtyping import Float
 from torch import nn
 from torch import Tensor
@@ -92,5 +93,9 @@ if __name__ == "__main__":
     fig = px.line(y=losses, x=np.arange(len(losses))*(cfg.n_ctx * batch_size), labels={"y":"Loss", "x":"Tokens"}, title="Training Curve")
     fig.show()
     
-    torch.save(model.state_dict(), 'model_weights.pth')
+
+    # Save the model weights with timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    save_path = os.path.join('trained_models', f'model_weights_{timestamp}.pth')
+    torch.save(model.state_dict(), save_path)
 
