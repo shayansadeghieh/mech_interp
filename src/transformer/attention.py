@@ -19,21 +19,22 @@ class Attention(nn.Module):
     b_O: Float[Tensor, "n_heads d_head"]
 
     def __init__(self, cfg):
+        super().__init__()
         self.cfg = cfg
         self.W_Q = nn.Parameter(torch.empty((cfg.n_heads, cfg.d_model, cfg.d_head)))
-        self.b_Q = nn.Parameter(torch.zeros((cfg.n_head, cfg.d_head)))
+        self.b_Q = nn.Parameter(torch.zeros((cfg.n_heads, cfg.d_head)))
         nn.init.normal_(self.W_Q, std=self.cfg.init_range)
 
         self.W_K = nn.Parameter(torch.empty((cfg.n_heads, cfg.d_model, cfg.d_head)))
-        self.b_K = nn.Parameter(torch.zeros((cfg.n_head, cfg.d_head)))
+        self.b_K = nn.Parameter(torch.zeros((cfg.n_heads, cfg.d_head)))
         nn.init.normal_(self.W_K, std=self.cfg.init_range)
 
         self.W_V = nn.Parameter(torch.empty((cfg.n_heads, cfg.d_model, cfg.d_head)))
-        self.b_V = nn.Parameter(torch.zeros((cfg.n_head, cfg.d_head)))
+        self.b_V = nn.Parameter(torch.zeros((cfg.n_heads, cfg.d_head)))
         nn.init.normal_(self.W_V, std=self.cfg.init_range)
 
         self.W_O = nn.Parameter(torch.empty((cfg.n_heads, cfg.d_model, cfg.d_head)))
-        self.b_O = nn.Parameter(torch.zeros((cfg.n_head, cfg.d_head)))
+        self.b_O = nn.Parameter(torch.zeros((cfg.n_heads, cfg.d_head)))
         nn.init.normal_(self.W_O, std=self.cfg.init_range)
 
         self.register_buffer("IGNORE", torch.tensor(-1e5, dtype=torch.float32))

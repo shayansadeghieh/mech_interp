@@ -12,5 +12,3 @@ class Config:
     d_mlp: int = 3072
     n_heads: int = 12
     n_layers: int = 12
-
-cfg = Config()

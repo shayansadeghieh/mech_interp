@@ -17,11 +17,11 @@ class MLP(nn.Module):
 
         self.cfg = cfg 
         self.W_in = nn.Parameter(torch.empty((cfg.d_model, cfg.d_mlp)))
-        self.b_in = nn.Paramter(torch.zeros((cfg.d_mlp)))
+        self.b_in = nn.Parameter(torch.zeros((cfg.d_mlp)))
         nn.init.normal_(self.W_in, std=self.cfg.init_range)
 
         self.W_out = nn.Parameter(torch.empty((cfg.d_mlp, cfg.d_model)))
-        self.b_out = nn.Paramter(torch.zeros((cfg.d_model)))
+        self.b_out = nn.Parameter(torch.zeros((cfg.d_model)))
         nn.init.normal_(self.W_out, std=self.cfg.init_range)
     
     def forward(self, normalized_resid_mid: Float[Tensor, "batch position d_model"]):
