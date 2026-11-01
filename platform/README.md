@@ -1,6 +1,6 @@
 # Activation Monitoring Platform
 
-**Design proposal · MVP**
+**MVP design · Local inference implemented.** Setup and commands: [Development guide](DEVELOPMENT.md).
 
 Turn LLM activations into validated, versioned monitors. Users harvest activations, train probes for specific behaviors, and deploy those probes alongside inference to publish metrics to Prometheus and Grafana. Probe scores are predictive signals; they do not by themselves establish a model’s intent or explain its mechanisms.
 

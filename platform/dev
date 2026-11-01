@@ -1,0 +1,65 @@
+#!/bin/sh
+# Every writable Python/model path stays inside this project.
+set -eu
+PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+cd "$PROJECT_DIR"
+unset VIRTUAL_ENV PYTHONHOME PYTHONPATH UV_PROJECT UV_PYTHON UV_CONFIG_FILE
+unset UV_PYTHON_PREFERENCE UV_MANAGED_PYTHON UV_NO_MANAGED_PYTHON
+export PYTHONNOUSERSITE=1
+export UV_PROJECT_ENVIRONMENT="$PROJECT_DIR/.venv"
+export UV_PYTHON_INSTALL_DIR="$PROJECT_DIR/.python"
+export UV_CACHE_DIR="$PROJECT_DIR/.cache/uv"
+export XDG_CACHE_HOME="$PROJECT_DIR/.cache"
+export HF_HOME="$PROJECT_DIR/.cache/huggingface"
+export HF_HUB_CACHE="$HF_HOME/hub"
+export HF_XET_CACHE="$HF_HOME/xet"
+export TORCH_HOME="$PROJECT_DIR/.cache/torch"
+export MPLCONFIGDIR="$PROJECT_DIR/.cache/matplotlib"
+unset HUGGINGFACE_HUB_CACHE TRANSFORMERS_CACHE PYTORCH_MPS_HIGH_WATERMARK_RATIO
+
+for local_dir in .venv .python .cache; do
+    if [ -L "$PROJECT_DIR/$local_dir" ]; then
+        printf 'Refusing symlinked project directory: %s\n' "$local_dir" >&2
+        exit 1
+    fi
+done
+
+if [ -d "$PROJECT_DIR/.venv" ]; then
+    if [ ! -x "$PROJECT_DIR/.venv/bin/python" ]; then
+        printf '%s\n' 'Existing .venv is incomplete; move it aside before setup.' >&2
+        exit 1
+    fi
+    "$PROJECT_DIR/.venv/bin/python" -I -c '
+import pathlib, sys
+root = pathlib.Path.cwd()
+assert pathlib.Path(sys.prefix).resolve() == root / ".venv", "Wrong virtual environment"
+assert pathlib.Path(sys.base_prefix).resolve().is_relative_to(root / ".python"), "Wrong base Python"
+'
+fi
+
+case "${1:-help}" in
+    setup)
+        uv --no-config python install --no-bin 3.12.11
+        uv --no-config sync --locked --managed-python --python 3.12.11
+        ;;
+    lock)
+        uv --no-config python install --no-bin 3.12.11
+        uv --no-config lock --managed-python --python 3.12.11
+        ;;
+    help|-h|--help)
+        printf '%s\n' 'Usage: ./dev {setup|lock|test|lint|doctor|generate [options]}'
+        ;;
+    *)
+        if [ ! -x "$PROJECT_DIR/.venv/bin/python" ]; then
+            printf '%s\n' 'Run ./dev setup first.' >&2
+            exit 1
+        fi
+        command=$1
+        shift
+        case "$command" in
+            test) exec "$PROJECT_DIR/.venv/bin/python" -I -m pytest "$@" ;;
+            lint) exec "$PROJECT_DIR/.venv/bin/python" -I -m ruff check . "$@" ;;
+            *) exec "$PROJECT_DIR/.venv/bin/python" -I -m activation_monitor "$command" "$@" ;;
+        esac
+        ;;
+esac
